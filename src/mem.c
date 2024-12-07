@@ -157,3 +157,11 @@ bool is_address_range_valid(addr_t start, addr_t end) {
 addr_t get_page_boundary(addr_t address) {
     return align_address(address + system_page_size - 1);
 }
+
+int mask_current_version(unsigned int offset) {
+    return offset & CURRENT_VERSION_MASK
+}
+
+int is_within_range(unsigned int offset, unsigned int min, unsigned int max) {
+    return (offset >= min && offset <= max);
+}
