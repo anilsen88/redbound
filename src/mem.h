@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+bool init_memory_subsystem(void);
 bool read_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size);
 bool write_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size);
 bool validate_memory_range(addr_t address, size_t size);

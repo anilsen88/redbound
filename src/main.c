@@ -82,6 +82,11 @@ int main(int argc, char *argv[]) {
     signal(SIGTERM, signal_handler);
     atexit(cleanup);
 
+    if (!init_memory_subsystem()) {
+        fprintf(stderr, "Failed to initialize memory subsystem\n");
+        return 1;
+    }
+
     spoof_config_t *config = load_config(argv[2]);
     if (!config) {
         fprintf(stderr, "Failed to load configuration\n");

@@ -1,9 +1,20 @@
 #include "mem.h"
 #include <string.h>
+#include <unistd.h>
 
-#define PAGE_SIZE 4096
 #define KERNEL_MIN_ADDR 0xffff800000000000ULL
 #define KERNEL_MAX_ADDR 0xffffffffffffffffULL
+
+static size_t system_page_size = 0;
+
+bool init_memory_subsystem(void) {
+    long page_size = sysconf(_SC_PAGESIZE);
+    if (page_size <= 0) {
+        return false;
+    }
+    system_page_size = (size_t)page_size;
+    return true;
+}
 
 bool read_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size) {
     if (!buffer || !validate_memory_range(address, size)) {
@@ -31,27 +42,27 @@ bool is_kernel_address(addr_t address) {
 }
 
 addr_t align_address(addr_t address) {
-    return address & ~(PAGE_SIZE - 1);
+    return address & ~(system_page_size - 1);
 }
 
 bool is_page_aligned(addr_t address) {
-    return (address & (PAGE_SIZE - 1)) == 0;
+    return (address & (system_page_size - 1)) == 0;
 }
 
 size_t get_page_size(void) {
-    return PAGE_SIZE;
+    return system_page_size;
 }
 
 addr_t get_next_page(addr_t address) {
-    return align_address(address) + PAGE_SIZE;
+    return align_address(address) + system_page_size;
 }
 
 addr_t get_previous_page(addr_t address) {
-    return align_address(address) - PAGE_SIZE;
+    return align_address(address) - system_page_size;
 }
 
 size_t get_offset_in_page(addr_t address) {
-    return address & (PAGE_SIZE - 1);
+    return address & (system_page_size - 1);
 }
 
 bool is_same_page(addr_t addr1, addr_t addr2) {
@@ -67,5 +78,5 @@ bool is_address_range_valid(addr_t start, addr_t end) {
 }
 
 addr_t get_page_boundary(addr_t address) {
-    return align_address(address + PAGE_SIZE - 1);
+    return align_address(address + system_page_size - 1);
 }
