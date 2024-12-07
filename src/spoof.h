@@ -20,5 +20,8 @@ bool validate_kaslr_offset(addr_t offset);
 bool is_spoofing_active(void);
 addr_t generate_random_offset(void);
 addr_t get_current_spoofed_offset(void);
+bool is_kaslr_enabled(vmi_instance_t vmi);
+addr_t calculate_effective_offset(addr_t base_offset, uint32_t version_code);
+bool is_offset_blacklisted(addr_t offset, uint32_t version_code);
 
 #endif // SPOOF_H
