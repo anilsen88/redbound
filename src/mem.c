@@ -1,12 +1,21 @@
 #include "mem.h"
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #define MAX_KERNEL_REGIONS 16
 
 static size_t system_page_size = 0;
 static kernel_region_t kernel_regions[MAX_KERNEL_REGIONS];
 static size_t num_kernel_regions = 0;
+
+bool safe_add(addr_t a, addr_t b, addr_t *result) {
+    if (__builtin_add_overflow(a, b, result)) {
+        return false;
+    }
+    return true;
+}
 
 bool init_memory_subsystem(void) {
     long page_size = sysconf(_SC_PAGESIZE);
@@ -35,6 +44,9 @@ bool add_kernel_region(addr_t start, addr_t end) {
 }
 
 bool is_kernel_address(addr_t address) {
+    if (!is_page_aligned(address)) {
+        return false;
+    }
     for (size_t i = 0; i < num_kernel_regions; i++) {
         if (address >= kernel_regions[i].start && address <= kernel_regions[i].end) {
             return true;
@@ -48,12 +60,11 @@ bool validate_memory_range(addr_t address, size_t size) {
         return false;
     }
 
-    if (__builtin_add_overflow(address, size - 1, &(addr_t){0})) {
+    addr_t end_address;
+    if (!safe_add(address, size - 1, &end_address)) {
         return false;
     }
 
-    addr_t end_address = address + size - 1;
-    
     bool start_valid = false;
     bool end_valid = false;
     
@@ -108,11 +119,19 @@ size_t get_page_size(void) {
 }
 
 addr_t get_next_page(addr_t address) {
-    return align_address(address) + system_page_size;
+    addr_t next_page;
+    if (!safe_add(align_address(address), system_page_size, &next_page)) {
+        return 0; // Indicate an error or overflow
+    }
+    return next_page;
 }
 
 addr_t get_previous_page(addr_t address) {
-    return align_address(address) - system_page_size;
+    addr_t previous_page;
+    if (!safe_add(align_address(address), -system_page_size, &previous_page)) {
+        return 0; // Indicate an error or overflow
+    }
+    return previous_page;
 }
 
 size_t get_offset_in_page(addr_t address) {
@@ -124,7 +143,11 @@ bool is_same_page(addr_t addr1, addr_t addr2) {
 }
 
 size_t get_memory_size(addr_t start, addr_t end) {
-    return end - start + 1;
+    addr_t size;
+    if (!safe_add(end, 1 - start, &size)) {
+        return 0; // Indicate an error or overflow
+    }
+    return size;
 }
 
 bool is_address_range_valid(addr_t start, addr_t end) {
