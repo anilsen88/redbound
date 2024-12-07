@@ -15,8 +15,11 @@ bool init_memory_subsystem(void) {
     }
     system_page_size = (size_t)page_size;
     num_kernel_regions = 0;
-    
-    add_kernel_region(0xffff800000000000ULL, 0xffffffffffffffffULL);
+
+    uint64_t min_addr, max_addr;
+    set_kernel_address_ranges(&min_addr, &max_addr);
+
+    add_kernel_region(min_addr, max_addr);
     return true;
 }
 

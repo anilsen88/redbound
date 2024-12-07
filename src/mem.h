@@ -4,6 +4,7 @@
 #include <libvmi/libvmi.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "kernel_config.h"
 
 typedef struct {
     addr_t start;
