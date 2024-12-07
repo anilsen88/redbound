@@ -1,0 +1,8 @@
+{
+    "target_offset": "0xffffffff81000000",
+    "randomize": true,
+    "interval": 1000,
+    "kernel_version": "5.15.0",
+    "debug_level": 1,
+    "log_file": "/var/log/kaslr_spoofer.log"
+}
