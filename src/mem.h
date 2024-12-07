@@ -26,5 +26,7 @@ bool is_same_page(addr_t addr1, addr_t addr2);
 size_t get_memory_size(addr_t start, addr_t end);
 bool is_address_range_valid(addr_t start, addr_t end);
 addr_t get_page_boundary(addr_t address);
+bool is_same_page_non_contiguous(addr_t addr1, addr_t addr2);
+bool is_address_range_valid_non_contiguous(addr_t start, addr_t end);
 
 #endif // MEM_H

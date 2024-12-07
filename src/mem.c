@@ -69,6 +69,15 @@ bool validate_memory_range(addr_t address, size_t size) {
     return false;
 }
 
+bool is_same_page_non_contiguous(addr_t addr1, addr_t addr2) {
+    return (align_address(addr1) == align_address(addr2)) || 
+           (is_kernel_address(addr1) && is_kernel_address(addr2));
+}
+
+bool is_address_range_valid_non_contiguous(addr_t start, addr_t end) {
+    return validate_memory_range(start, get_memory_size(start, end));
+}
+
 bool read_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size) {
     if (!buffer || !validate_memory_range(address, size)) {
         return false;
@@ -108,7 +117,7 @@ size_t get_offset_in_page(addr_t address) {
 }
 
 bool is_same_page(addr_t addr1, addr_t addr2) {
-    return align_address(addr1) == align_address(addr2);
+    return is_same_page_non_contiguous(addr1, addr2);
 }
 
 size_t get_memory_size(addr_t start, addr_t end) {
@@ -116,7 +125,7 @@ size_t get_memory_size(addr_t start, addr_t end) {
 }
 
 bool is_address_range_valid(addr_t start, addr_t end) {
-    return validate_memory_range(start, get_memory_size(start, end));
+    return is_address_range_valid_non_contiguous(start, end);
 }
 
 addr_t get_page_boundary(addr_t address) {
