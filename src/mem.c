@@ -31,9 +31,27 @@ bool write_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size)
 }
 
 bool validate_memory_range(addr_t address, size_t size) {
-    if (!size || address + size < address || !is_kernel_address(address) || !is_kernel_address(address + size - 1)) {
+    if (!size) {
         return false;
     }
+
+    if (address > KERNEL_MAX_ADDR) {
+        return false;
+    }
+
+    if (size > KERNEL_MAX_ADDR - address) {
+        return false;
+    }
+
+    addr_t end_address = address + size - 1;
+    if (end_address > KERNEL_MAX_ADDR) {
+        return false;
+    }
+
+    if (!is_kernel_address(address) || !is_kernel_address(end_address)) {
+        return false;
+    }
+
     return true;
 }
 
