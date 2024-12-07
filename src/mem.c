@@ -2,10 +2,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#define KERNEL_MIN_ADDR 0xffff800000000000ULL
-#define KERNEL_MAX_ADDR 0xffffffffffffffffULL
+#define MAX_KERNEL_REGIONS 16
 
 static size_t system_page_size = 0;
+static kernel_region_t kernel_regions[MAX_KERNEL_REGIONS];
+static size_t num_kernel_regions = 0;
 
 bool init_memory_subsystem(void) {
     long page_size = sysconf(_SC_PAGESIZE);
@@ -13,7 +14,59 @@ bool init_memory_subsystem(void) {
         return false;
     }
     system_page_size = (size_t)page_size;
+    num_kernel_regions = 0;
+    
+    add_kernel_region(0xffff800000000000ULL, 0xffffffffffffffffULL);
     return true;
+}
+
+bool add_kernel_region(addr_t start, addr_t end) {
+    if (num_kernel_regions >= MAX_KERNEL_REGIONS || start > end) {
+        return false;
+    }
+    
+    kernel_regions[num_kernel_regions].start = start;
+    kernel_regions[num_kernel_regions].end = end;
+    num_kernel_regions++;
+    return true;
+}
+
+bool is_kernel_address(addr_t address) {
+    for (size_t i = 0; i < num_kernel_regions; i++) {
+        if (address >= kernel_regions[i].start && address <= kernel_regions[i].end) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool validate_memory_range(addr_t address, size_t size) {
+    if (!size) {
+        return false;
+    }
+
+    if (__builtin_add_overflow(address, size - 1, &(addr_t){0})) {
+        return false;
+    }
+
+    addr_t end_address = address + size - 1;
+    
+    bool start_valid = false;
+    bool end_valid = false;
+    
+    for (size_t i = 0; i < num_kernel_regions; i++) {
+        if (address >= kernel_regions[i].start && address <= kernel_regions[i].end) {
+            start_valid = true;
+        }
+        if (end_address >= kernel_regions[i].start && end_address <= kernel_regions[i].end) {
+            end_valid = true;
+        }
+        if (start_valid && end_valid) {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 bool read_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size) {
@@ -28,35 +81,6 @@ bool write_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size)
         return false;
     }
     return vmi_write_va(vmi, address, 0, buffer, size) == VMI_SUCCESS;
-}
-
-bool validate_memory_range(addr_t address, size_t size) {
-    if (!size) {
-        return false;
-    }
-
-    if (address > KERNEL_MAX_ADDR) {
-        return false;
-    }
-
-    if (size > KERNEL_MAX_ADDR - address) {
-        return false;
-    }
-
-    addr_t end_address = address + size - 1;
-    if (end_address > KERNEL_MAX_ADDR) {
-        return false;
-    }
-
-    if (!is_kernel_address(address) || !is_kernel_address(end_address)) {
-        return false;
-    }
-
-    return true;
-}
-
-bool is_kernel_address(addr_t address) {
-    return (address >= KERNEL_MIN_ADDR && address <= KERNEL_MAX_ADDR);
 }
 
 addr_t align_address(addr_t address) {

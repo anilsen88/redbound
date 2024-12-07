@@ -5,7 +5,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef struct {
+    addr_t start;
+    addr_t end;
+} kernel_region_t;
+
 bool init_memory_subsystem(void);
+bool add_kernel_region(addr_t start, addr_t end);
 bool read_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size);
 bool write_memory(vmi_instance_t vmi, addr_t address, void *buffer, size_t size);
 bool validate_memory_range(addr_t address, size_t size);
