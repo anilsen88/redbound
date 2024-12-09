@@ -78,8 +78,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0; // or SA_RESTART to restart certain system calls
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
     atexit(cleanup);
 
     if (!init_memory_subsystem()) {

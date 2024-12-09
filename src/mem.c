@@ -145,7 +145,7 @@ bool is_same_page(addr_t addr1, addr_t addr2) {
 size_t get_memory_size(addr_t start, addr_t end) {
     addr_t size;
     if (!safe_add(end, 1 - start, &size)) {
-        return 0; // Indicate an error or overflow
+        return 0; 
     }
     return size;
 }
